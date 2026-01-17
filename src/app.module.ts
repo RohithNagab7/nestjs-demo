@@ -9,6 +9,8 @@ import { PostModule } from './posts/post.module';
 import { APP_PIPE } from '@nestjs/core';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Post } from './posts/entities/post.entity';
+import { AuthModule } from './auth/auth.module';
+import { User } from './auth/entities/user.entity';
 
 @Module({
   imports: [
@@ -23,12 +25,13 @@ import { Post } from './posts/entities/post.entity';
       username: 'postgres',
       password: '3103',
       database: 'nestjs-demo',
-      entities: [Post],
+      entities: [Post, User],
       synchronize: true,
     }),
     HelloModule,
     UserModule,
     PostModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [
