@@ -1,3 +1,4 @@
+import { Exclude } from 'class-transformer';
 import { IsNotEmpty, IsString } from 'class-validator';
 import { Post } from 'src/posts/entities/post.entity';
 import {
@@ -29,6 +30,7 @@ export class User {
   name: string;
 
   @Column()
+  @Exclude()
   password: string; //hash this before storing
 
   @Column({
@@ -41,9 +43,11 @@ export class User {
   @OneToMany(() => Post, (post) => post.authorName)
   posts: Post[];
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: 'timestamptz' })
+  @Exclude()
   createdAt: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ type: 'timestamptz' })
+  @Exclude()
   updatedAt: Date;
 }

@@ -10,6 +10,7 @@ import { RegisterDto } from './dto/register.dto';
 import * as bcrypt from 'bcrypt';
 import { LoginDto } from './dto/login.dto';
 import { JwtService } from '@nestjs/jwt';
+import { JwtRefreshPayload } from './interface/jwt.interface';
 
 @Injectable()
 export class AuthService {
@@ -37,14 +38,13 @@ export class AuthService {
     });
 
     const savedUser = await this.userRepository.save(newlyCreatedUser);
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { password: _password, ...userResut } = savedUser;
 
     return {
-      user: userResut,
+      user: savedUser,
       message: 'User registered successfully',
     };
   }
+
   async registerAdmin(registeredAdmin: RegisterDto) {
     const isExistingUser = await this.userRepository.findOne({
       where: { email: registeredAdmin.email },
@@ -91,17 +91,16 @@ export class AuthService {
     }
 
     const tokens = this.generateTokens(user);
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { password: _password, ...result } = user;
+
     return {
-      user: result,
+      user: user,
       ...tokens,
     };
   }
 
   async refreshToken(refreshToken: string) {
     try {
-      const payload = this.jwtService.verify(refreshToken, {
+      const payload = this.jwtService.verify<JwtRefreshPayload>(refreshToken, {
         secret: process.env.JWT_REFRESH_TOKEN,
       });
 
@@ -115,16 +114,25 @@ export class AuthService {
 
       const accessToken = this.generateAccessToken(user);
       return { accessToken };
-    } catch (error) {
-      throw new UnauthorizedException('Invalid token');
+    } catch (error: any) {
+      throw new UnauthorizedException('Invalid token', error);
     }
   }
 
+  async getUserById(userId: number) {
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new UnauthorizedException('User not found!');
+    }
+
+    return user;
+  }
+
   private async hashPassword(password: string): Promise<string> {
-    const hashedPassword = await bcrypt.hash(
-      password,
-      process.env.BCRYPT_SALT || 10,
-    );
+    const hashedPassword = await bcrypt.hash(password, 10);
     return hashedPassword;
   }
 
@@ -166,7 +174,7 @@ export class AuthService {
     };
 
     const jwtRefreshToken = this.jwtService.sign(payload, {
-      secret: process.env.JWT_SECRET_TOKEN,
+      secret: process.env.JWT_REFRESH_TOKEN,
       expiresIn: '7d',
     });
 
