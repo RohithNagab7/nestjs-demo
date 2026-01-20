@@ -12,10 +12,11 @@ import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { CurrentUser } from './decorators/current-user.decorator';
-import type { RequestWithUser } from './interface/jwt.interface';
+import type { JwtStrategyPayload } from './interface/jwt.interface';
 import { Roles } from './decorators/roles.decorator';
 import { UserRole } from './entities/user.entity';
 import { RolesGuard } from './guards/roles.guard';
+import { LoginThrottler } from './guards/login-throttler.guard';
 
 @UseInterceptors(ClassSerializerInterceptor)
 @Controller('auth')
@@ -26,6 +27,7 @@ export class AuthController {
     return this.authService.registerUser(registeredUser);
   }
 
+  @UseGuards(LoginThrottler)
   @Post('login')
   loginUser(@Body() loggedInUser: LoginDto) {
     return this.authService.loginUser(loggedInUser);
@@ -38,12 +40,8 @@ export class AuthController {
 
   @UseGuards(JwtAuthGuard)
   @Get('profile')
-  getProfile(@CurrentUser() user: RequestWithUser) {
-    return {
-      sub: user?.sub, // or whatever your payload structure is
-      role: user?.role,
-      name: user?.name,
-    };
+  getProfile(@CurrentUser() user: JwtStrategyPayload) {
+    return user;
   }
 
   @Post('registeradmin')
