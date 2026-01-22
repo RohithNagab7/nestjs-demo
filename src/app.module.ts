@@ -13,6 +13,8 @@ import { AuthModule } from './auth/auth.module';
 import { User } from './auth/entities/user.entity';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { CacheModule } from '@nestjs/cache-manager';
+import { FileUploadModule } from './file-upload/file-upload.module';
+import { File } from './file-upload/entities/file.entity';
 
 @Module({
   imports: [
@@ -46,13 +48,14 @@ import { CacheModule } from '@nestjs/cache-manager';
       username: 'postgres',
       password: '3103',
       database: 'nestjs-demo',
-      entities: [Post, User],
+      entities: [Post, User, File],
       synchronize: true,
     }),
     HelloModule,
     UserModule,
     PostModule,
     AuthModule,
+    FileUploadModule,
   ],
   controllers: [AppController],
   providers: [
